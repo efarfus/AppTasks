@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {
+  Platform,
   Text,
   View,
   Modal,
@@ -10,21 +11,49 @@ import {
 } from 'react-native';
 import commonStyles from '../commonStyles';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import moment from 'moment';
 
-const initialState = {desc: '', date: new Date()};
+const initialState = {desc: '', date: new Date(), showDatePicker: false};
 
 export default class AddTask extends Component {
   state = {
     ...initialState,
   };
 
+  save = () => {
+    const newTask = {
+      desc: this.state.desc,
+      date: this.state.date,
+    };
+
+    this.props.onSave && this.props.onSave(newTask);
+    this.setState({...initialState});
+  };
+
   getDatePicker = () => {
-    return (
+    let datePicker = (
       <DateTimePicker
         value={this.state.date}
-        onChange={(_, date) => this.setState({date})}
+        onChange={(_, date) => this.setState({date, showDatePicker: false})}
         mode="date"></DateTimePicker>
     );
+
+    const dateString = moment(this.state.date).format(
+      'dddd, D [de] MMMM [de] YYYY',
+    );
+
+    if (Platform.OS === 'android') {
+      datePicker = (
+        <View style={styles.date}>
+          <TouchableOpacity
+            onPress={() => this.setState({showDatePicker: true})}>
+            <Text>{dateString}</Text>
+          </TouchableOpacity>
+          {this.state.showDatePicker && datePicker}
+        </View>
+      );
+    }
+    return datePicker;
   };
 
   render() {
@@ -49,7 +78,7 @@ export default class AddTask extends Component {
             <TouchableOpacity onPress={this.props.onCancel}>
               <Text style={styles.button}>Cancelar</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={this.save}>
               <Text style={styles.button}>Salvar</Text>
             </TouchableOpacity>
           </View>
